@@ -21,9 +21,9 @@
       --focus:#6aa1ff;          /* focus ring */
       /* layout gaps */
       --logo-size:100px;
-      --gap-top:12px;           /* brandbar → logo */
-      --gap-between:8px;        /* logo → card */
-      --brandbar-h:35px;        /* keep in sync with .brandbar height */
+      --gap-top:0px;           /* brandbar → logo */
+      --gap-between:0px;        /* logo → card */
+      --brandbar-h:38px;        /* keep in sync with .brandbar height */
     }
     @media (prefers-color-scheme: dark){
       :root{
@@ -63,11 +63,10 @@
 
     /* Logo */
     .card-logo{
-      width:100px;
-      height:100px;
+      width:var(--logo-size);
+      height:var(--logo-size);
       display:block;
-      margin:-90px;
-    
+      margin:0 auto var(--gap-between);
       object-fit:contain;
       max-width:100%;
     }
