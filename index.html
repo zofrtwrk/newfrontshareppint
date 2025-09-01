@@ -127,6 +127,46 @@
     .caption small{ display:block; opacity:.9 }
 
    
+   
+   
+   
+   /* Logo size token */
+:root{ --logo-size: 40px; }
+
+/* Centers the image at the top of the card header */
+.card-head { text-align: center; }
+
+/* Image styling */
+.card-logo{
+  width: var(--logo-size);
+  height: var(--logo-size);
+  display: block;
+  margin: 0 auto 10px;      /* top of frame + a small gap before the title */
+  object-fit: contain;      /* keeps aspect ratio for PNG/SVG */
+}
+
+/* Optional: subtle ring for visibility on mixed backgrounds */
+.card-logo--ring{
+  border-radius: 8px;
+  box-shadow: 0 0 0 1px rgba(0,0,0,.06);
+}
+
+/* Optional dark-mode tweak if your asset is dark */
+@media (prefers-color-scheme: dark){
+  .card-logo{ filter: brightness(1.1) contrast(1.05); }
+}
+
+   
+   
+   
+   
+   
+   
+   
+   
+   
+   
+   
 
     /* Narrow */
     @media (max-width:480px){
@@ -147,10 +187,15 @@
   <main class="wrap">
   
   
-   <svg aria-hidden="true" width="28" height="28" viewBox="0 0 24 24" fill="none" style="display:block;margin:0 auto 6px">
-          <path d="M4 7a3 3 0 0 1 3-3h10a3 3 0 0 1 3 3v10a3 3 0 0 1-3 3H7a3 3 0 0 1-3-3V7Z" stroke="currentColor" opacity=".25"/>
-          <path d="M7 10h10M7 14h6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-        </svg>
+ 
+  <!-- host your file e.g. /assets/identity-mark.svg or .png -->
+  <img class="card-logo"
+       src="/assets/identity-mark.svg"
+       alt=""
+       width="40" height="40"
+       decoding="async" loading="eager">
+
+
   
   
   
