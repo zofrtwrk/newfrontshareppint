@@ -132,23 +132,38 @@
    
    
    /* Logo size token */
-:root{ --logo-size: 40px; }
+/* Brand bar height is 33px, so reflect that everywhere */
+.brandbar{ height:33px; background:var(--brand); color:#fff; display:flex; align-items:center; padding:0 16px; font-weight:600; letter-spacing:.2px; }
 
-/* Centers the image at the top of the card header */
-.card-head { text-align: center; }
+/* Tighter spacing between header ⇢ logo ⇢ card */
+:root{
+  --logo-size: 40px;        /* keep your current logo size */
+  --gap-top: 14px;          /* space from brandbar to logo */
+  --gap-between: 8px;       /* space between logo and card frame */
+}
 
-/* Image styling */
+.wrap{
+  /* subtract the real brandbar height; smaller top padding for tighter look */
+  min-height: calc(100% - 33px);
+  display: grid; place-items: center;
+  padding: var(--gap-top) 16px 32px;   /* was 45px 16px */
+}
+
+/* Logo styling */
 .card-logo{
-  
-  margin: 0 auto 3px;      /* top of frame + a small gap before the title */
-  object-fit: contain;      /* keeps aspect ratio for PNG/SVG */
+  width: var(--logo-size);
+  height: var(--logo-size);
+  display: block;
+  margin: 0 auto var(--gap-between);   /* gap under logo */
+  object-fit: contain;
+  max-width: 100%;
 }
 
-/* Optional: subtle ring for visibility on mixed backgrounds */
-.card-logo--ring{
-  border-radius: 8px;
-  box-shadow: 0 0 0 1px rgba(0,0,0,.06);
+/* Add a hairline gap above the card to separate it from the logo visually */
+.card{ 
+  margin-top: var(--gap-between);
 }
+
 
 /* Optional dark-mode tweak if your asset is dark */
 @media (prefers-color-scheme: dark){
@@ -177,22 +192,12 @@
 <body>
 
   <!-- Top brand bar -->
-  <div class="brandbar">
-    <!-- Put your brand/product here -->
-    <span id="brandName">CloudBox</span>
-  </div>
+ <div class="brandbar">
+  <span id="brandName">CloudBox</span>
+</div>
 
-  <!-- Centered card -->
-  <main class="wrap">
-  
-  
- 
-  <!-- host your file e.g. /assets/identity-mark.svg or .png -->
-  <img class="card-logo"
-       src="nn.PNG"
-       alt=""
-       width="90" height="90"
-       decoding="async" loading="eager">
+<main class="wrap">
+  <img class="card-logo" src="nn.PNG" alt="" width="90" height="90" decoding="async" loading="eager">
 
 
 
