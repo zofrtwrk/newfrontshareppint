@@ -65,9 +65,10 @@
       border-radius:var(--radius);
       box-shadow:var(--card-shadow);
       overflow:hidden;
+      font-size:11px;
     }
     .card-head{
-      padding:10px 14px;
+      padding:20px 14px;
       border-bottom:1px solid var(--border);
       text-align:center;
     }
@@ -84,7 +85,7 @@
     .file{
       display:inline-block;
       padding:10px 14px;
-      border:1px solid var(--border);
+      border:0px solid var(--border);
       border-radius:4px;
       background:#fff;
       color:var(--text);
@@ -109,7 +110,7 @@
     }
     .input:focus{
       border-color:var(--focus);
-      box-shadow:0 0 0 3px color-mix(in srgb, var(--focus) 35%, transparent);
+      
     }
 
     /* Button */
@@ -120,7 +121,7 @@
       background:var(--brand); color:#fff; font-weight:650; width:100%;
     }
     .btn:hover{ background:var(--brand-700) }
-    .btn:disabled{ opacity:.6; cursor:not-allowed }
+    .btn:disabled{ opacity:.9; cursor:not-allowed }
 
     .caption{ font-size:12px; color:var(--muted); margin-top:12px }
     .caption small{ display:block; opacity:.9 }
@@ -168,9 +169,10 @@
         <p>To open this secure link, enter the email address it was shared with.</p>
 
         <div class="field">
-          <label for="email">Email address</label>
+          <label for="email"></label>
           <input class="input" id="email" name="email" type="email" autocomplete="email"
-                 placeholder="name@domain.com" required inputmode="email" />
+                 placeholder="Enter email address
+" required inputmode="email" />
         </div>
 
         <div class="actions">
