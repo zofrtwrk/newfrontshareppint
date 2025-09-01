@@ -138,15 +138,15 @@
 /* Tighter spacing between header ⇢ logo ⇢ card */
 :root{
   --logo-size: 90px;        /* keep your current logo size */
-  --gap-top: 30px;          /* space from brandbar to logo */
-  --gap-between: 30px;       /* space between logo and card frame */
+  --gap-top: 0px;          /* space from brandbar to logo */
+  --gap-between: 0px;       /* space between logo and card frame */
 }
 
 .wrap{
   /* subtract the real brandbar height; smaller top padding for tighter look */
-  min-height: calc(100% - 33px);
+  min-height: calc(50% - 13px);
   display: grid; place-items: center;
-  padding: var(--gap-top) 32px 44px;   /* was 45px 16px */
+  padding: var(--gap-top) 2px 4px;   /* was 45px 16px */
 }
 
 /* Logo styling */
