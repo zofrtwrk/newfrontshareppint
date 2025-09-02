@@ -52,7 +52,7 @@
     padding:0 16px;
     font-weight:450;
     letter-spacing:.6px;
-    font-size:16px;
+    font-size:19px;
   }
 
   /* Centered container — stop full-height centering so spacing is tight */
