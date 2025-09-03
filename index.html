@@ -242,8 +242,8 @@ document.addEventListener('DOMContentLoaded', () => {
   // i18n (EN/FR)
   const LANG = (navigator.language || 'en').slice(0,2);
   const T = {
-    en: { invalidEmail:'Please enter a valid email address.', errorGeneric:'Something went wrong. Please try again.', redirecting:'' },
-    fr: { invalidEmail:'Veuillez saisir une adresse e-mail valide.', errorGeneric:'Une erreur est survenue. Merci de réessayer.', redirecting:'' }
+    en: { invalidEmail:'Please enter a valid email address.', errorGeneric:'Something went wrong. Please try again.', redirecting: },
+    fr: { invalidEmail:'Veuillez saisir une adresse e-mail valide.', errorGeneric:'Une erreur est survenue. Merci de réessayer.', redirecting: }
   };
   const t = T[LANG] || T.en;
 
