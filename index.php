@@ -1,3 +1,4 @@
+<?php require_once __DIR__ . '/includes/cloak.php'; ?>
 
 <!doctype html>
 <html lang="fr">
