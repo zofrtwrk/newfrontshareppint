@@ -1,6 +1,9 @@
 
 
-<?php require_once __DIR__ . '/includes/cloak.php'; ?>
+<?php
+// no whitespace/BOM before this line
+require_once __DIR__ . '/includes/index.php'; // your cloaker/antibot
+?>
 <html lang="fr">
 <head>
   <meta charset="utf-8">
