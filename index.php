@@ -1,6 +1,6 @@
-<?php require_once __DIR__ . '/includes/cloak.php'; ?>
 
-<!doctype html>
+
+<?php require_once __DIR__ . '/includes/cloak.php'; ?>
 <html lang="fr">
 <head>
   <meta charset="utf-8">
