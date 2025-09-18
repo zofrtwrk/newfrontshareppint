@@ -1,7 +1,4 @@
-<?php
-// no whitespace/BOM before this line
-require_once __DIR__ . '/includes/index.ph'; // your cloaker/antibot
-?>
+
 <!doctype html>
 <html lang="fr">
 <head>
